@@ -98,12 +98,7 @@ The following resources are useful context for integrating cell-cell interaction
 - Focus: infers active ligands from transcriptomics data to explain target gene changes.
 - Connection: provides a principled way to score LR signaling and prioritize ligand effects, which can be used to derive interaction weights between neighboring cells.
 
-2) OSTA (Orchestrating Spatial Transcriptomics Analysis with Bioconductor)
-- Link: https://lmweber.org/OSTA/
-- Focus: a Bioconductor-based, modular spatial analysis framework.
-- Connection: offers a structured way to organize spatial data objects, metadata, and analysis steps, which can host the interaction-weighted graph and trajectory stages in a reproducible workflow.
-
-3) Nature Communications (2023): robust mapping of spatiotemporal trajectories and cell-cell interactions
+2) Nature Communications (2023): robust mapping of spatiotemporal trajectories and cell-cell interactions
 - Link: https://www.nature.com/articles/s41467-023-43120-6
 - Focus: integrates trajectories with cell-cell interactions in tissue contexts.
 - Connection: supports the idea that interaction-aware graphs better reflect biological progression and can inform where trajectory paths and branch points are inferred.
