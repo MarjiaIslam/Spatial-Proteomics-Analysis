@@ -151,9 +151,9 @@ CD8 is a heterodimer (CD8A + CD8B).
 
 ## 4. Pipeline Steps in Detail <a name="4-pipeline-steps"></a>
 
-<!-- ### Step 0: Export UniProt mapping
+### Step 0: Export UniProt mapping
 - Saves `uniprot_protein_to_gene_mapping.csv` — the full provenance table
-- This file documents exactly how each protein was mapped and to which UniProt entry -->
+- This file documents exactly how each protein was mapped and to which UniProt entry
 
 ### Step 1: Load data
 - Reads the arcsinh-normalized expression matrix (~570K cells × 43 columns)
