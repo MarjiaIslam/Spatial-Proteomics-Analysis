@@ -3,3 +3,5 @@
 # Data and results (ignored to avoid large binary/CSV files)
 /data/
 /output/
+/checkpoints/
+/dOCS/

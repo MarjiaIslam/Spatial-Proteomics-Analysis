@@ -1,16 +1,15 @@
 """
 08_evaluation.py
-Evaluate the trained GraphSAGE model:
-  - Pool risk scores from all CV folds → overall C-index
-  - Time-dependent AUC at t=365, 730, 1095 days
-  - Kaplan-Meier curves (high vs low risk, median split)
-  - Gradient-based saliency map per node feature
-  - Comparison table: GraphSAGE vs GCN vs MLP vs RSF
+Evaluate the enriched RSF model trained on graph-level summaries:
+    - Pool risk scores from all CV folds → overall C-index
+    - Time-dependent AUC at t=365, 730, 1095 days
+    - Kaplan-Meier curves (high vs low risk, median split)
+    - Comparison table: EnrichedRSF only
 
-Run AFTER 06_training.py and 07_baselines.py.
+Run AFTER 06_training.py.
 
 Run:
-    python spatial_survival/08_evaluation.py
+        python spatial_survival/08_evaluation.py
 """
 
 import sys
@@ -35,9 +34,6 @@ from config import (
 )
 from utils import get_logger, ensure_dirs, set_seed, compute_cindex, plot_km_curves
 
-_model_module = importlib.import_module("05_graphsage_model")
-GraphSAGESurvival = _model_module.GraphSAGESurvival
-
 PYG_RAW_DIR  = OUTPUT_DIR / "pyg_dataset" / "raw"
 INDEX_PATH   = OUTPUT_DIR / "pyg_dataset" / "dataset_index.csv"
 CKPT_DIR     = RESULTS_DIR / "checkpoints"
@@ -56,8 +52,8 @@ FEATURE_NAMES = PROTEIN_COLS + [
 # Pool predictions from all CV folds
 # ---------------------------------------------------------------------------
 
-def load_pooled_predictions(model_name: str = "GraphSAGE") -> pd.DataFrame:
-    if model_name == "GraphSAGE":
+def load_pooled_predictions(model_name: str = "EnrichedRSF") -> pd.DataFrame:
+    if model_name == "EnrichedRSF":
         fold_files = sorted(RESULTS_DIR.glob("fold_*_predictions.csv"))
     else:
         fold_files = sorted(BASELINE_DIR.glob(f"{model_name}_fold_*_predictions.csv"))
@@ -163,76 +159,38 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # 1. Pooled GraphSAGE evaluation
-    logger.info("Loading pooled GraphSAGE predictions …")
-    sage_preds = load_pooled_predictions("GraphSAGE")
-    if sage_preds.empty:
-        logger.error("No GraphSAGE predictions found. Run 06_training.py first.")
+    logger.info("Loading pooled enriched RSF predictions …")
+    rsf_preds = load_pooled_predictions("EnrichedRSF")
+    if rsf_preds.empty:
+        logger.error("No enriched RSF predictions found. Run 06_training.py first.")
         return
 
-    overall_ci = compute_cindex(sage_preds["risk_score"].to_numpy(),
-                                 sage_preds["y_time"].to_numpy(),
-                                 sage_preds["y_event"].to_numpy())
-    logger.info(f"GraphSAGE overall C-index (pooled): {overall_ci:.4f}")
+    overall_ci = compute_cindex(rsf_preds["risk_score"].to_numpy(),
+                                 rsf_preds["y_time"].to_numpy(),
+                                 rsf_preds["y_event"].to_numpy())
+    logger.info(f"Enriched RSF overall C-index (pooled): {overall_ci:.4f}")
 
     # 2. KM curves
     logger.info("Plotting KM curves …")
     plot_km_curves(
-        sage_preds["risk_score"].to_numpy(),
-        sage_preds["y_time"].to_numpy(),
-        sage_preds["y_event"].to_numpy(),
-        title="GraphSAGE Survival — High vs Low Risk",
-        save_path=EVAL_DIR / "km_curves_graphsage.png",
+        rsf_preds["risk_score"].to_numpy(),
+        rsf_preds["y_time"].to_numpy(),
+        rsf_preds["y_event"].to_numpy(),
+        title="Enriched RSF Survival — High vs Low Risk",
+        save_path=EVAL_DIR / "km_curves_enriched_rsf.png",
     )
 
     # 3. Time-dependent AUC
-    auc_dict = compute_time_auc(sage_preds, EVAL_TIMES)
+    auc_dict = compute_time_auc(rsf_preds, EVAL_TIMES)
     for k, v in auc_dict.items():
         logger.info(f"  {k}: {v:.4f}")
 
-    # 4. Saliency map (using last fold's checkpoint + its training data)
-    try:
-        logger.info("Computing saliency map …")
-        index_df = pd.read_csv(INDEX_PATH)
-        all_data = []
-        for _, row in index_df.iterrows():
-            pt = PYG_RAW_DIR / f"{row['acquisition_id']}.pt"
-            if pt.exists():
-                all_data.append(torch.load(pt, weights_only=False))
-
-        ckpt_path = CKPT_DIR / f"fold_{N_CV_FOLDS}_best.pt"
-        if ckpt_path.exists():
-            ckpt = torch.load(ckpt_path, map_location=device, weights_only=False)
-            model = GraphSAGESurvival(
-                in_channels=N_NODE_FEATURES, hidden_dim=HIDDEN_DIM,
-                n_layers=N_LAYERS, dropout=0.0,
-                n_interaction_types=N_INTERACTION_TYPES,
-                interaction_embed_dim=INTERACTION_EMBED_DIM,
-            ).to(device)
-            model.load_state_dict(ckpt["state_dict"])
-
-            # Scale with saved scaler
-            scaler = ckpt["scaler"]
-            scaled_data = []
-            for d in all_data[:100]:   # sample 100 graphs for speed
-                import copy
-                d2 = copy.deepcopy(d)
-                d2.x = torch.tensor(scaler.transform(d2.x.numpy()), dtype=torch.float32)
-                scaled_data.append(d2)
-
-            saliency = compute_saliency(model, scaled_data, device)
-            plot_saliency(saliency, EVAL_DIR / "feature_saliency.png")
-            sal_df = pd.DataFrame({"feature": FEATURE_NAMES, "saliency": saliency})
-            sal_df.sort_values("saliency", ascending=False).to_csv(
-                EVAL_DIR / "feature_saliency.csv", index=False)
-            logger.info(f"  Saliency saved to {EVAL_DIR / 'feature_saliency.png'}")
-        else:
-            logger.warning("No checkpoint found for saliency map")
-    except Exception as e:
-        logger.warning(f"Saliency computation failed: {e}")
+    # 4. Saliency is not applicable to RSF; skip this step.
+    logger.info("RSF has no gradient saliency map; skipping that step.")
 
     # 5. Comparison table
     logger.info("Building model comparison table …")
-    table = build_comparison_table(["GraphSAGE", "GCN", "MLP", "RSF"])
+    table = build_comparison_table(["EnrichedRSF"])
     if not table.empty:
         table_path = EVAL_DIR / "model_comparison.csv"
         table.to_csv(table_path, index=False)
@@ -240,9 +198,9 @@ def main():
         logger.info(f"Table saved to {table_path}")
 
     # 6. Save summary metrics
-    summary = {"model": "GraphSAGE", "pooled_cindex": overall_ci}
+    summary = {"model": "EnrichedRSF", "pooled_cindex": overall_ci}
     summary.update(auc_dict)
-    pd.DataFrame([summary]).to_csv(EVAL_DIR / "graphsage_metrics.csv", index=False)
+    pd.DataFrame([summary]).to_csv(EVAL_DIR / "enriched_rsf_metrics.csv", index=False)
     logger.info(f"\nAll evaluation outputs saved to {EVAL_DIR}")
 
 
