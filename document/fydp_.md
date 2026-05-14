@@ -34,16 +34,6 @@ SPATIAL TRAJECTORY ANALYSIS PIPELINE - SIMPLIFIED FLOW
        │
        ▼
 ┌──────────────────┐
-│ Trajectory       │  Learn disease path
-│  (PAGA/Monocle3) │  → Principal graph
-└──────┬───────────┘
-       │
-       ▼
-┌──────────────────┐
-│ Pseudospace      │  Project cells onto trajectory
-│ Score            │  → [0 to 1] progression score
-└──────┬───────────┘
-       │
        ▼
 ┌──────────────────┐
 │ Patient Aggregate│  Mean, max, distribution
@@ -133,17 +123,7 @@ INPUT: Basic Graph G=(V,E) + Expression Matrix + Coordinates + Clusters
                         │ • Node features: N × 48  │
                         │ • Edge features: E × 3   │
                         │ • Richer context for     │
-                        │   trajectory inference   │
-                        └───────────┬──────────────┘
-                                    │
-                                    ▼
-                        ┌──────────────────────────┐
-                        │ TRAJECTORY INFERENCE     │
-                        │ (PAGA/Monocle3)          │
-                        │ ✓ Uses density info      │
-                        │ ✓ Respects boundaries    │
-                        │ ✓ Follows gradients      │
-                        │ ✓ Better trajectory      │
+                            │   downstream models      │
                         └──────────────────────────┘
 ```
 
@@ -172,13 +152,4 @@ Feature              │ Dimension │ Range   │ Biology
 3. Distance Weight   │ 1         │ [0, 1]  │ Spatial decay
 
 
-EXPECTED IMPROVEMENTS
-═══════════════════════════════════════════════════════════════
-
-✓ Trajectory biological plausibility: +30-40%
-✓ C-index improvement: +0.04-0.06
-✓ Interpretability: Significantly enhanced
-✓ Interface detection: Marked with high entropy + high boundary score
-✓ Progression direction: Revealed by gradients
-✓ Hub identification: Found via centrality measures
 ```

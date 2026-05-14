@@ -10,16 +10,6 @@
 
 ---
 
-## Table of Contents
-
-1. [Core Input Files](#core-input-files) - `dataset_info.tar.gz`
-2. [Biomarker Expression](#biomarker-expression) - `biomarker_expr_summary.tar.gz`
-3. [Neighborhood Matrices](#neighborhood-matrices) - `all_k_neighborhood_mats.tar.gz`
-4. [Ripley K Functions](#ripley-k-functions) - `k_fns_norm_by_uw_qc_labeled.csv`
-5. [Comparison Methods](#comparison-methods) - `patwa_comparisons.tar.gz`, `denvar.tar.gz`
-6. [Output Results](#output-results) - `rsf_risk_scores.tar.gz`
-
----
 
 # 1. CORE INPUT FILES
 
@@ -34,47 +24,7 @@
 **Total**: 40 markers
 
 **Content**:
-```
-CD31
-CD57
-CD4
-CD15
-FoxP3
-CD16
-CD20
-CD45RO
-CD38
-CD34
-CD11b
-CD68
-CD134
-TMEM16A
-PanCK
-Podoplanin
-CD45
-GranzymeB
-CD49f
-CD11c
-CD47
-CD8
-CD117
-Vimentin
-CD69
-aSMA
-CD14
-CD21
-HLA-DR
-PDL1
-CD56
-p16
-PD1
-CD45RA
-ICOS
-CD152
-Ki67
-CollagenIV
-CD3e
-```
+
 
 **Grouped by Function**:
 | Category | Markers |

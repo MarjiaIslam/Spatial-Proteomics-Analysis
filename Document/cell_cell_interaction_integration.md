@@ -60,21 +60,7 @@ Node features
 
 These features enrich the existing density, entropy, and centrality features.
 
-### 5) Run Trajectory on the Interaction-Weighted Graph
 
-Convert combined weights to a transition matrix:
-
-- P_ij = w_ij / sum_k w_ik
-
-Trajectory inference (PAGA, Monocle3, diffusion) then follows interaction-supported transitions rather than purely spatial adjacency.
-
-### 6) Validate the Effect of Interactions
-
-Compare trajectories with and without interaction weights:
-
-- Are branch points more biologically plausible?
-- Do known micro-niches align with high interaction connectivity?
-- Does progression score correlate better with clinical outcomes?
 
 ## Minimal Integration Summary
 
